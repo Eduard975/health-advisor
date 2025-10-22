@@ -1,0 +1,19 @@
+# --- Core AI + RAG ---
+langchain>=0.2.10
+langchain-community>=0.2.10
+langchain-core>=0.2.10
+faiss-cpu>=1.8.0
+openai>=1.40.0
+langchain-openai>=0.2.0
+
+# --- Data handling ---
+pandas>=2.2.0
+numpy>=1.26.0
+
+# --- Utility libraries ---
+tqdm>=4.66.0
+python-dotenv>=1.0.1
+
+# --- Compatibility for text embeddings / serialization ---
+requests>=2.32.0
+tenacity>=8.3.0
