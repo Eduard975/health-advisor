@@ -2,7 +2,7 @@ pandas
 python-dotenv
 faiss-cpu
 langchain==0.3.4
-langchain-core==0.3.12
+langchain-core==0.3.13
 langchain-community==0.3.3
 langchain-text-splitters==0.3.1
 langchain-google-genai==1.0.5
