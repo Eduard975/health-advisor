@@ -1,9 +1,8 @@
 import pandas as pd
-from dotenv import load_dotenv
-
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings  # Alternative
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -13,6 +12,6 @@ texts = df["text"].tolist()
 splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
 docs = splitter.create_documents(texts)
 
-embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 db = FAISS.from_documents(docs, embeddings)
 db.save_local("data/food/food_vectorstore")
