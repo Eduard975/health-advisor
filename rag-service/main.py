@@ -1,9 +1,17 @@
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain.chains import RetrievalQA
-from langchain.chat_models import ChatOpenAI
 
 retriever = db.as_retriever(search_kwargs={"k": 3})
-llm = ChatOpenAI(model="gpt-5", temperature=0)
+
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.5-flash",
+    temperature=0.2,
+)
+
 rag = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
 
 query = "Which foods are highest in Vitamin C and lowest in fat?"
-print(rag.run(query))
+response = rag.run(query)
+
+print("\n🧠 Query:", query)
+print("💬 Gemini RAG Response:\n", response)
