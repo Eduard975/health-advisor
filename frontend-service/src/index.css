@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Medical Teal (60% - Primary) */
+    --primary: 173 58% 39%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 173 58% 85%;
+    --primary-dark: 173 58% 25%;
+    
+    /* Warm Taupe/Coffee (30% - Secondary) */
+    --secondary: 30 20% 50%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-light: 30 20% 90%;
+    --secondary-dark: 30 20% 35%;
+    
+    /* Soft Coral/Rose (10% - Accent) */
+    --accent: 349 75% 68%;
+    --accent-foreground: 0 0% 100%;
+    --accent-light: 349 75% 92%;
+    --accent-dark: 349 75% 50%;
+    
+    /* Neutral Background */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 15%;
+    
+    /* Card & Surface */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 15%;
+    
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 15%;
+    
+    /* Muted */
+    --muted: 30 15% 95%;
+    --muted-foreground: 0 0% 45%;
+    
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Border & Input */
+    --border: 30 15% 88%;
+    --input: 30 15% 88%;
+    --ring: 173 58% 39%;
+    
+    /* Sidebar (Teal theme) */
+    --sidebar-background: 173 58% 39%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 173 58% 25%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 173 58% 32%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 173 58% 32%;
+    --sidebar-ring: 349 75% 68%;
+    
+    --radius: 0.75rem;
+    
+    /* Custom transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fade: opacity 0.3s ease-in-out;
+  }
+
+  .dark {
+    --primary: 173 58% 45%;
+    --primary-foreground: 0 0% 10%;
+    --primary-light: 173 58% 30%;
+    --primary-dark: 173 58% 60%;
+    
+    --secondary: 30 20% 40%;
+    --secondary-foreground: 0 0% 95%;
+    --secondary-light: 30 20% 25%;
+    --secondary-dark: 30 20% 55%;
+    
+    --accent: 349 75% 65%;
+    --accent-foreground: 0 0% 10%;
+    --accent-light: 349 75% 45%;
+    --accent-dark: 349 75% 75%;
+    
+    --background: 0 0% 10%;
+    --foreground: 0 0% 95%;
+    
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 95%;
+    
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
+    
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 65%;
+    
+    --destructive: 0 84% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 173 58% 45%;
+    
+    --sidebar-background: 173 58% 15%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 173 58% 25%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 173 58% 20%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 349 75% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-roboto antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium;
+  }
+}
+
+@layer utilities {
+  .focus-fade {
+    @apply transition-opacity duration-300 ease-in-out;
+  }
+  
+  .focus-fade:focus {
+    @apply opacity-80;
+  }
+  
+  .focus-fade:hover {
+    @apply opacity-90;
+  }
+}
