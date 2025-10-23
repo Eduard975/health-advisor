@@ -1,0 +1,10 @@
+pandas
+python-dotenv
+faiss-cpu
+sentence-transformers
+langchain
+langchain-core
+langchain-community
+langchain-huggingface
+langchain-text-splitters
+google-generativeai

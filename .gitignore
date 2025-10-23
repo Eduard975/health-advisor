@@ -1,5 +1,8 @@
 .venv
 .env
+*.Identifier
+*_text.csv
+vectors
 
 # Logs
 logs
@@ -25,3 +28,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+.python-version
