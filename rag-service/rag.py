@@ -31,7 +31,6 @@ activity_keywords = [
     "gym", "stretching", "steps", "movement", "fitness"
 ]
 
-
 def get_relevant_context(db, query, k=3):
     """Retrieve top-k relevant documents from a vector store"""
     docs = db.similarity_search(query, k=k)
@@ -69,7 +68,7 @@ def compute_dynamic_k(query, min_k=3, max_k=15):
 
     return food_k, activity_k
 
-def rag_query(query):
+def send_query(query):
     dataset_type = classify_query(query)
     if dataset_type == "no":
         return "I can't answer that question."
@@ -118,8 +117,3 @@ def rag_query(query):
     response = model.generate_content(prompt)
     return response.text
 
-# Example usage
-if __name__ == "__main__":
-    query = "What is a great vitamin A food?"
-    print("\n🧠 Query:", query)
-    print("💬 Gemini Hybrid RAG Response:\n", rag_query(query))

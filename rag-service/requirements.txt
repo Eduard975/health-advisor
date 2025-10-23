@@ -1,4 +1,9 @@
+python-dotenv
+faiss-cpu
 google-generativeai
+fastapi[standard]
+pydantic
 langchain-community
 langchain-huggingface
-python-dotenv
+sentence_transformers
+pandas

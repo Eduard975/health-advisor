@@ -3,6 +3,7 @@
 *.Identifier
 *_text.csv
 vectors
+__pycache__
 
 # Logs
 logs
