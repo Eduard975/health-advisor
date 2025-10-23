@@ -1,0 +1,17 @@
+services:
+  rag-service:
+    build:
+      context: ./rag-service
+      dockerfile: dockerfile
+    container_name: rag-service
+    volumes:
+      - ./data:/app/data
+      - ./sentence:/app/sentence
+      - ./vectors:/app/vectors
+      - ./__pycache__:/app/__pycache__
+    environment:
+      - PYTHONUNBUFFERED=1  
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    command: sh -c "fastapi dev main.py"
