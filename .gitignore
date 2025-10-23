@@ -1,5 +1,8 @@
 .venv
 .env
+*.Identifier
+*_text.csv
+vectors
 
 # Logs
 logs

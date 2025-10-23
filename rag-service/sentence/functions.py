@@ -1,18 +1,12 @@
-import pandas as pd
-
-file_paths = [
-    "./data/food/FINAL_FOOD_DATASET/FOOD-DATA-GROUP1.csv",
-    "./data/food/FINAL_FOOD_DATASET/FOOD-DATA-GROUP2.csv",
-    "./data/food/FINAL_FOOD_DATASET/FOOD-DATA-GROUP3.csv",
-    "./data/food/FINAL_FOOD_DATASET/FOOD-DATA-GROUP4.csv",
-    "./data/food/FINAL_FOOD_DATASET/FOOD-DATA-GROUP5.csv",
-]
-
-# Load the Kaggle dataset
-dfs = [pd.read_csv(fp) for fp in file_paths]
-df = pd.concat(dfs, ignore_index=True)
-
-print(f"Combined dataset size: {len(df)} rows")
+def make_exercise_sentence(row):
+    return (
+        f"Performing {row['Activity, Exercise or Sport (1 hour)'].lower()} for one hour burns approximately "
+        f"{row['130 lb']} calories for a person weighing 130 pounds, "
+        f"{row['155 lb']} calories for someone weighing 155 pounds, "
+        f"{row['180 lb']} calories for a person at 180 pounds, and "
+        f"{row['205 lb']} calories for someone weighing 205 pounds. "
+        f"This activity has an estimated energy cost of {row['Calories per kg']:.2f} calories per kilogram of body weight."
+    )
 
 def make_food_sentence(row):
     return (
@@ -36,9 +30,3 @@ def make_food_sentence(row):
         f"and Zinc = {row['Zinc']} mg. "
         f"The overall nutrition density score is {row['Nutrition Density']}. "
     )
-
-# Apply to every row
-df["text"] = df.apply(make_food_sentence, axis=1)
-
-# Save text data for RAG ingestion
-df[["food", "text"]].to_csv("data/food/food_nutrition_text.csv", index=False)

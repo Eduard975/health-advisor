@@ -1,9 +1,4 @@
-pandas
-python-dotenv
-faiss-cpu
-sentence-transformers
-langchain
-langchain-core
-langchain-community
-langchain-text-splitters
 google-generativeai
+langchain-community
+langchain-huggingface
+python-dotenv
