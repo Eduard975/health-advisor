@@ -4,11 +4,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"health-harbor-backend/database"
 	"health-harbor-backend/handlers"
 	"health-harbor-backend/middleware"
+
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -16,17 +17,19 @@ func main() {
 		log.Println("No .env file found")
 	}
 
-	database.ConnectDB()
+	database.InitFirebase()
+	defer database.CloseFirebase()
 
 	router := gin.Default()
 
 	router.Use(middleware.CORS())
 
-	// the only public routes
+	// Auth routes
 	router.POST("/api/auth/login", handlers.Login)
 	router.POST("/api/auth/register", handlers.Register)
+	router.POST("/api/auth/google", handlers.GoogleAuth)
 
-	// the protected routse
+	// Protected routes
 	auth := router.Group("/api")
 	auth.Use(middleware.AuthMiddleware())
 	{
