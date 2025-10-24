@@ -4,9 +4,9 @@ import (
 	"log"
 	"os"
 
-	"health-harbor-backend/database"
-	"health-harbor-backend/handlers"
-	"health-harbor-backend/middleware"
+	"orchestrator-service/database"
+	"orchestrator-service/handlers"
+	"orchestrator-service/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"

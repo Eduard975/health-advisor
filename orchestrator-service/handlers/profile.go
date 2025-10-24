@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"health-harbor-backend/database"
-	"health-harbor-backend/models"
+	"orchestrator-service/database"
+	"orchestrator-service/models"
 
 	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"

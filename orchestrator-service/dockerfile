@@ -1,35 +1,21 @@
-# ---------- Stage 1: Build ----------
-FROM golang:1.23 AS builder
+# Use the official Golang image
+FROM golang:1.22-alpine
 
-# Set working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy go.mod and go.sum first (for caching deps)
-COPY go.mod go.sum ./
+# Install air for live reloading
+RUN go install github.com/cosmtrek/air@v1.51.0
 
-# Download dependencies
+# Copy Go module files to leverage Docker's build cache
+COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy the rest of the source code
 COPY . .
 
-# Build the Go binary
-RUN CGO_ENABLED=0 GOOS=linux go build -o main .
-
-# ---------- Stage 2: Run ----------
-FROM alpine:latest
-
-# Set working directory
-WORKDIR /app
-
-# Install certificates (needed for HTTPS requests)
-RUN apk --no-cache add ca-certificates
-
-# Copy binary from builder
-COPY --from=builder /app/main .
-
-# Expose port 8001
+# Expose the port the Go app runs on
 EXPOSE 8001
 
-# Run the binary
-CMD ["./main"]
+# The command to start the app with air for hot reloading 🔄
+CMD ["air", "-c", ".air.toml"]

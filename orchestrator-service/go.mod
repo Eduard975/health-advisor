@@ -1,4 +1,4 @@
-module health-harbor-backend
+module orchestrator-service
 
 go 1.21
 

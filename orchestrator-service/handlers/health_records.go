@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"health-harbor-backend/database"
-	"health-harbor-backend/models"
-	"health-harbor-backend/utils"
+	"orchestrator-service/database"
+	"orchestrator-service/models"
+	"orchestrator-service/utils"
 
 	"github.com/gin-gonic/gin"
 	"google.golang.org/api/iterator"

@@ -17,18 +17,29 @@ activity_db = FAISS.load_local("vectors/activity", embeddings, allow_dangerous_d
 genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
 model = genai.GenerativeModel('gemini-2.0-flash-exp')
 
-food_keywords = [
-    "food", "nutrition", "protein", "carbs", "fats", "vitamins", "minerals",
-    "diet", "weight", "calories", "meal", "snack", "breakfast", "lunch", 
-    "dinner", "recipes", "ingredients", "healthy", "macro", "micro", "supplements", 
-    "fiber", "sugar", "cholesterol", "hydration"
+food_keywords = [ 
+    "food", "foods", "nutrition", "protein", "carbs", "fats", 
+    "vitamin", "vitamins", 
+    "mineral", "minerals", 
+    "diet", "weight", "calorie", "calories", "meal", "snack", 
+    "breakfast", "lunch", "dinner", 
+    "recipe", "recipes", "ingredient", "ingredients",
+    "healthy", "macro", "micro", "supplement", "supplements",
+    "fiber", "sugar", "cholesterol", "hydration",
+
+    "fruit", "fruits", "vegetable", "vegetables", "meat", "fish",
+    "dairy", "grain", "grains", "nut", "nuts", "seed", "seeds",
+    "beverage", "drink", "eat", "eating"
 ]
 
 activity_keywords = [
-    "exercise", "calories burned", "cycling", "walking", "running", "jogging",
-    "weight", "workout", "sport", "lbs", "activities", "training", "strength", 
-    "cardio", "flexibility", "endurance", "HIIT", "yoga", "pilates", "swimming", 
-    "gym", "stretching", "steps", "movement", "fitness"
+    "exercise", "exercises", "calorie", "calories burned",  
+    "cycling", "walking", "running", "jogging",
+    "weight", "workout", "workouts", "sport", "sports",
+    "lbs", "lb", "kg", "activity", "activities",  
+    "training", "strength", "cardio", "flexibility", 
+    "endurance", "HIIT", "yoga", "pilates", "swimming", 
+    "gym", "stretching", "step", "steps", "movement", "fitness"
 ]
 
 def get_relevant_context(db, query, k=3):
@@ -38,9 +49,12 @@ def get_relevant_context(db, query, k=3):
 
 def classify_query(query):
     query_lower = query.lower()
+    # print(query_lower)
+
     is_activity = any(word in query_lower for word in activity_keywords)
     is_food = any(word in query_lower for word in food_keywords)
-
+    
+    # print(is_activity, is_food)
     if is_food and is_activity:
         return "both"
     elif is_food:
@@ -48,15 +62,15 @@ def classify_query(query):
     elif is_activity:
         return "activity"
     else:
-        return "no"
+        return "both"
     
 
-def compute_dynamic_k(query, min_k=3, max_k=15):
+def compute_dynamic_k(query, min_k=5, max_k=15):
     query_lower = query.lower()
 
     food_score = sum(query_lower.count(word) for word in food_keywords)
     activity_score = sum(query_lower.count(word) for word in activity_keywords)
-
+    
     total = food_score + activity_score
 
     if total == 0:
@@ -109,11 +123,12 @@ def send_query(query):
         qualified healthcare professional or registered dietitian for personalized advice.\"
         3. Provide simple metrics or calculations if needed 
         but avoid very detailed calculations or overly long explanations.
-        4. If information is insufficient, clearly state it.
 
         Provide the answer now:
         """
     
     response = model.generate_content(prompt)
+
+    print(response)
     return response.text
 

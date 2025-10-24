@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"health-harbor-backend/utils"
+	"orchestrator-service/utils"
 
 	"github.com/gin-gonic/gin"
 )

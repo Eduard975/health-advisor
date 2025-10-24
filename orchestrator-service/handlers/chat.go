@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"time"
 
-	"health-harbor-backend/database"
-	"health-harbor-backend/models"
-	"health-harbor-backend/utils"
+	"orchestrator-service/database"
+	"orchestrator-service/models"
+	"orchestrator-service/utils"
 
 	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
@@ -222,17 +222,14 @@ func GetChatSessions(c *gin.Context) {
 	})
 }
 
-// Helper function to generate AI responses
 func generateAIResponse(userMessage string) string {
-	// This is a simple mock - in production, integrate with actual AI service
 	payload := map[string]string{"query": userMessage}
-
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Sprintf("Error encoding JSON: %v", err)
 	}
 
-	resp, err := http.Post("http://localhost:8000/query", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post("http://rag-service:8000/query", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return fmt.Sprintf("Error sending request: %v", err)
 	}
@@ -243,8 +240,18 @@ func generateAIResponse(userMessage string) string {
 		return fmt.Sprintf("Error reading response: %v", err)
 	}
 
-	// Return response as string (you can unmarshal JSON if needed)
-	return string(body)
+	// Parse the JSON response
+	var ragResponse struct {
+		Answer string `json:"answer"`
+	}
+
+	if err := json.Unmarshal(body, &ragResponse); err != nil {
+		// If parsing fails, return the raw response
+		return string(body)
+	}
+
+	// Return just the answer text
+	return ragResponse.Answer
 }
 
 // Helper function to reverse message order
