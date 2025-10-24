@@ -49,27 +49,58 @@ const Dashboard = () => {
   };
 
   const parseAIResponse = (text: string): AIResponse => {
-    // Use optional hyphen `-?` and trim whitespace around the header
-    // This makes the parser more flexible
-    const summaryMatch = text.match(
-      /-?\s*Summary:([\s\S]*?)(?=-?\s*Recommendations:|$)/
-    );
-    const recommendationsMatch = text.match(
-      /-?\s*Recommendations:([\s\S]*?)(?=This information is|$)/
-    );
-    const disclaimerMatch = text.match(/This information is[\s\S]*/);
+    // Define the headers we're looking for, case-insensitively
+    const summaryHeader = "Summary:";
+    const recsHeader = "Recommendations:";
+    const disclaimerHeader = "This information is";
 
-    // Clean up the recommendations by removing the leading '*' from each line
-    // react-markdown will add the bullet points back correctly.
-    const recommendationsText = recommendationsMatch
-      ? recommendationsMatch[1].replace(/^\s*\*\s*/gm, "").trim()
-      : "";
+    const lowerText = text.toLowerCase();
 
-    return {
-      summary: summaryMatch ? summaryMatch[1].trim() : "No summary provided.",
-      recommendations: recommendationsText,
-      disclaimer: disclaimerMatch ? disclaimerMatch[0].trim() : "",
-    };
+    // Find the starting character index of each section
+    const summaryStartIndex = lowerText.indexOf(summaryHeader.toLowerCase());
+    const recsStartIndex = lowerText.indexOf(recsHeader.toLowerCase());
+    const disclaimerStartIndex = lowerText.indexOf(
+      disclaimerHeader.toLowerCase()
+    );
+
+    let summary = "";
+    let recommendations = "";
+    let disclaimer = "";
+
+    // Extract the disclaimer text first
+    if (disclaimerStartIndex !== -1) {
+      disclaimer = text.substring(disclaimerStartIndex).trim();
+    }
+
+    // Extract the summary text
+    if (summaryStartIndex !== -1) {
+      // The summary ends where the next section begins
+      let endOfSummaryIndex =
+        recsStartIndex !== -1 ? recsStartIndex : disclaimerStartIndex;
+      if (endOfSummaryIndex === -1) {
+        endOfSummaryIndex = text.length; // If no other sections, it goes to the end
+      }
+      summary = text
+        .substring(summaryStartIndex + summaryHeader.length, endOfSummaryIndex)
+        .trim();
+    }
+
+    // Extract the recommendations text
+    if (recsStartIndex !== -1) {
+      // The recommendations end where the disclaimer begins
+      let endOfRecsIndex =
+        disclaimerStartIndex !== -1 ? disclaimerStartIndex : text.length;
+      recommendations = text
+        .substring(recsStartIndex + recsHeader.length, endOfRecsIndex)
+        .trim();
+    }
+
+    // Fallback for text that doesn't match the structure at all
+    if (!summary && !recommendations && !disclaimer) {
+      return { summary: text, recommendations: "", disclaimer: "" };
+    }
+
+    return { summary, recommendations, disclaimer };
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -88,35 +119,37 @@ const Dashboard = () => {
     setIsLoading(true);
 
     try {
-      // const response = await authFetch("http://localhost:8001/api/chat", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ message: userMessage.text }),
-      // });
+      const response = await authFetch("http://localhost:8001/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMessage.text }),
+      });
 
-      // if (!response.ok) {
-      //   throw new Error(`Server error: ${response.status}`);
-      // }
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
 
-      // const data = await response.json();
+      const data = await response.json();
 
-      const data = `
-      **Yummy Foods Analysis**
+      //       const data = `
+      //       **Yummy Foods Analysis**
 
-- Summary: The provided foods vary significantly in nutritional content and calorie density. Sweet and sour sauces are high in sugars, while the SlimFast smoothie is high in protein. Yuca cassava chips and turkey salami are lower in calories.
+      // - Summary: The provided foods vary significantly in nutritional content and calorie density. Sweet and sour sauces are high in sugars, while the SlimFast smoothie is high in protein. Yuca cassava chips and turkey salami are lower in calories.
 
-- Recommendations:
-    *   Be mindful of portion sizes with sweet and sour sauces due to their high sugar content.
-    *   Consider the SlimFast smoothie as a protein source if needed.
-    *   Yuca cassava chips and turkey salami can be included in moderation, but prioritize whole, unprocessed foods.
+      // - Recommendations:
+      //     *   Be mindful of portion sizes with sweet and sour sauces due to their high sugar content.
+      //     *   Consider the SlimFast smoothie as a protein source if needed.
+      //     *   Yuca cassava chips and turkey salami can be included in moderation, but prioritize whole, unprocessed foods.
 
-This information is for general knowledge only and does not constitute medical advice. Consult with a qualified healthcare professional or registered dietitian for personalized advice."
-`;
-      console.log("## Data" + data);
+      // This information is for general knowledge only and does not constitute medical advice. Consult with a qualified healthcare professional or registered dietitian for personalized advice."
+      // `;
+
+      // console.log("## Data" + data);
 
       // Parse the text if it's a JSON string
-      // let aiResponseText = data.aiMessage.text;
-      let aiResponseText = data;
+      let aiResponseText = data.aiMessage.text;
+
+      // let aiResponseText = data;
 
       // Try to parse if it's a JSON string
       try {
@@ -195,19 +228,35 @@ This information is for general knowledge only and does not constitute medical a
                   }`}
                 >
                   {typeof message.text === "string" ? (
-                    <p className="text-sm leading-relaxed whitespace-pre-line">
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
                       {message.text}
                     </p>
                   ) : (
-                    <div className="text-sm leading-relaxed space-y-4">
+                    // Use the "prose" class for beautiful markdown styling with TailwindCSS
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
                       {/* Summary */}
                       {message.text.summary && (
+                        <>
+                          <h3 className="font-semibold text-base mb-2">
+                            Summary
+                          </h3>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {/* The '- ' from the raw text will be converted to a bullet point */}
+                            {message.text.summary.replace(/^- /, "* ")}
+                          </ReactMarkdown>
+                        </>
+                      )}
+                      <br />
+
+                      {/* Recommendations */}
+                      {message.text.recommendations.length > 0 && (
                         <div>
                           <p className="font-semibold text-base mb-2">
-                            Summary
+                            Recommendations
                           </p>
+                          {/* This is the part to replace */}
                           <ul className="list-disc ml-5 space-y-1">
-                            {formatAISection(message.text.summary).map(
+                            {formatAISection(message.text.recommendations).map(
                               (line, idx) => (
                                 <li key={idx}>{line}</li>
                               )
@@ -216,21 +265,9 @@ This information is for general knowledge only and does not constitute medical a
                         </div>
                       )}
 
-                      {/* Recommendations */}
-                      {message.text.recommendations.length > 0 && (
-                        <div>
-                          <p className="font-semibold text-base mb-2">
-                            Recommendations
-                          </p>
-                          <ul className="list-disc ml-5 space-y-1">
-                            {message.text.disclaimer}
-                          </ul>
-                        </div>
-                      )}
-
                       {/* Disclaimer */}
                       {message.text.disclaimer && (
-                        <p className="text-sm text-muted-foreground mt-4 italic">
+                        <p className="text-xs text-muted-foreground mt-4 italic">
                           {message.text.disclaimer}
                         </p>
                       )}
