@@ -7,7 +7,15 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
+var jwtSecret = []byte(getJWTSecret())
+
+func getJWTSecret() string {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		return "fallback-secret-key-change-in-production"
+	}
+	return secret
+}
 
 type Claims struct {
 	UserID string `json:"userId"`
