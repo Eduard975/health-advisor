@@ -49,53 +49,78 @@ const Dashboard = () => {
   };
 
   const parseAIResponse = (text: string): AIResponse => {
-    // Define the headers we're looking for, case-insensitively
-    const summaryHeader = "Summary:";
-    const recsHeader = "Recommendations:";
-    const disclaimerHeader = "This information is";
+    // Define the specific fallback message to check for
+    const fallbackMessage = "i'm sorry, but based on the provided information";
 
+    // --- Case 1: The AI could not answer ---
+    // If the text starts with the fallback message, return the whole text as the summary.
+    if (text.toLowerCase().startsWith(fallbackMessage)) {
+      return {
+        summary: text,
+        recommendations: "",
+        disclaimer: "",
+      };
+    }
+
+    // --- Case 2: The AI provided a structured answer ---
     const lowerText = text.toLowerCase();
 
+    // Define the markdown headers we will search for
+    const summaryMarker = "## summary";
+    const recsMarker = "## recommendations";
+    const disclaimerMarker = "## disclaimer";
+    const separatorMarker = "---"; // The horizontal rule
+
     // Find the starting character index of each section
-    const summaryStartIndex = lowerText.indexOf(summaryHeader.toLowerCase());
-    const recsStartIndex = lowerText.indexOf(recsHeader.toLowerCase());
-    const disclaimerStartIndex = lowerText.indexOf(
-      disclaimerHeader.toLowerCase()
-    );
+    const summaryStartIndex = lowerText.indexOf(summaryMarker);
+    const recsStartIndex = lowerText.indexOf(recsMarker);
+    let disclaimerStartIndex = lowerText.indexOf(disclaimerMarker);
+    // If the ## Disclaimer header isn't found, look for the separator '---'
+    if (disclaimerStartIndex === -1) {
+      disclaimerStartIndex = lowerText.indexOf(separatorMarker);
+    }
 
     let summary = "";
     let recommendations = "";
     let disclaimer = "";
 
-    // Extract the disclaimer text first
-    if (disclaimerStartIndex !== -1) {
-      disclaimer = text.substring(disclaimerStartIndex).trim();
-    }
-
-    // Extract the summary text
+    // Extract the Summary content by slicing the string
     if (summaryStartIndex !== -1) {
-      // The summary ends where the next section begins
-      let endOfSummaryIndex =
-        recsStartIndex !== -1 ? recsStartIndex : disclaimerStartIndex;
-      if (endOfSummaryIndex === -1) {
-        endOfSummaryIndex = text.length; // If no other sections, it goes to the end
-      }
+      const endOfSummary = recsStartIndex !== -1 ? recsStartIndex : text.length;
       summary = text
-        .substring(summaryStartIndex + summaryHeader.length, endOfSummaryIndex)
+        .substring(summaryStartIndex + summaryMarker.length, endOfSummary)
         .trim();
     }
 
-    // Extract the recommendations text
+    // Extract the Recommendations content
     if (recsStartIndex !== -1) {
-      // The recommendations end where the disclaimer begins
-      let endOfRecsIndex =
+      const endOfRecs =
         disclaimerStartIndex !== -1 ? disclaimerStartIndex : text.length;
       recommendations = text
-        .substring(recsStartIndex + recsHeader.length, endOfRecsIndex)
+        .substring(recsStartIndex + recsMarker.length, endOfRecs)
         .trim();
+
+      recommendations = recommendations.replace(/---/g, "").trim();
     }
 
-    // Fallback for text that doesn't match the structure at all
+    // Extract the Disclaimer content
+    if (disclaimerStartIndex !== -1) {
+      let startOfDisclaimerText = disclaimerStartIndex;
+      // Adjust the start position to be after the header/separator
+      if (
+        lowerText.substring(disclaimerStartIndex).startsWith(disclaimerMarker)
+      ) {
+        startOfDisclaimerText += disclaimerMarker.length;
+      } else if (
+        lowerText.substring(disclaimerStartIndex).startsWith(separatorMarker)
+      ) {
+        startOfDisclaimerText += separatorMarker.length;
+      }
+      disclaimer = text.substring(startOfDisclaimerText).trim();
+    }
+
+    // --- Case 3: The text is unstructured ---
+    // If no sections were found, return the whole text as the summary.
     if (!summary && !recommendations && !disclaimer) {
       return { summary: text, recommendations: "", disclaimer: "" };
     }
@@ -131,19 +156,19 @@ const Dashboard = () => {
 
       const data = await response.json();
 
-      //       const data = `
-      //       **Yummy Foods Analysis**
+      // ## TEST DATA
+      // const data = `## Summary Based on the provided data, sockeye salmon canned and fruit flavored
+      // water contain the highest amounts of Vitamin E per 100g. ## Recommendations -
+      // Consume sockeye salmon canned (7.0 mg of Vitamin E per 100g). -
+      //  Drink fruit flavored water (4.5 mg of Vitamin E per 100g). -
+      // Eat green tomato (0.7 mg of Vitamin E per 100g). -
+      // Eat dandelion greens cooked (0.6 mg of Vitamin E per 100g). -
+      // Eat orange roughy cooked (0.5 mg of Vitamin E per 100g).
+      //  --- ## Disclaimer This information is for general knowledge only and does not constitute medical advice.
+      // Consult with a qualified healthcare professional or registered dietitian for personalized advice.`;
 
-      // - Summary: The provided foods vary significantly in nutritional content and calorie density. Sweet and sour sauces are high in sugars, while the SlimFast smoothie is high in protein. Yuca cassava chips and turkey salami are lower in calories.
-
-      // - Recommendations:
-      //     *   Be mindful of portion sizes with sweet and sour sauces due to their high sugar content.
-      //     *   Consider the SlimFast smoothie as a protein source if needed.
-      //     *   Yuca cassava chips and turkey salami can be included in moderation, but prioritize whole, unprocessed foods.
-
-      // This information is for general knowledge only and does not constitute medical advice. Consult with a qualified healthcare professional or registered dietitian for personalized advice."
-      // `;
-
+      // const data = `I'm sorry, but based on the provided information,
+      //  I cannot answer that question. Please try rephrasing or asking about a different topic.`;
       // console.log("## Data" + data);
 
       // Parse the text if it's a JSON string
@@ -238,11 +263,15 @@ const Dashboard = () => {
                       {message.text.summary && (
                         <>
                           <h3 className="font-semibold text-base mb-2">
-                            Summary
+                            {/* Check the message content to decide the title */}
+                            {message.text.summary
+                              .toLowerCase()
+                              .startsWith("i'm sorry")
+                              ? "Unable to Answer"
+                              : "Summary"}
                           </h3>
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {/* The '- ' from the raw text will be converted to a bullet point */}
-                            {message.text.summary.replace(/^- /, "* ")}
+                            {message.text.summary}
                           </ReactMarkdown>
                         </>
                       )}
