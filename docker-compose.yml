@@ -5,11 +5,10 @@ services:
       dockerfile: dockerfile
     container_name: rag-service
     volumes:
-      - ./data:/app/data
-      - ./sentence:/app/sentence
-      - ./__pycache__:/app/__pycache__
-    environment:
-      - PYTHONUNBUFFERED=1  
+      - ./rag-service/data:/app/data
+      - ./rag-service/sentence:/app/sentence
+      - ./rag-service/main.py:/app/main.py
+      - ./rag-service/rag.py:/app/rag.py
     ports:
       - "8000:8000"
     restart: unless-stopped
