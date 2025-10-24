@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"health-harbor-backend/database"
@@ -222,29 +225,26 @@ func GetChatSessions(c *gin.Context) {
 // Helper function to generate AI responses
 func generateAIResponse(userMessage string) string {
 	// This is a simple mock - in production, integrate with actual AI service
-	responses := map[string]string{
-		"hello":      "Hello! I'm Health Harbor AI, your personal health advisor. How can I assist you with your health concerns today?",
-		"headache":   "I understand you're experiencing a headache. This could be due to various factors like stress, dehydration, or tension. Make sure to drink plenty of water, rest in a quiet room, and consider over-the-counter pain relief if appropriate. If the headache is severe, persistent, or accompanied by other symptoms like vision changes or fever, please consult a healthcare professional immediately.",
-		"sleep":      "Sleep is crucial for overall health. Adults typically need 7-9 hours of quality sleep per night. Maintain a consistent sleep schedule, create a relaxing bedtime routine, and avoid screens before bed. If you're having persistent sleep issues, it's best to consult with a healthcare provider.",
-		"fever":      "A fever is often a sign that your body is fighting an infection. Make sure to stay hydrated, rest, and monitor your temperature. If the fever is high (above 103°F/39.4°C), lasts more than 3 days, or is accompanied by severe symptoms like difficulty breathing or a stiff neck, seek medical attention immediately.",
-		"cough":      "A cough can be caused by various factors including colds, allergies, or respiratory infections. Stay hydrated, use a humidifier, and consider over-the-counter remedies for symptom relief. If your cough persists for more than 3 weeks, is accompanied by chest pain, or you're coughing up blood, please see a doctor.",
-		"stress":     "Stress can have significant impacts on both mental and physical health. Practice relaxation techniques like deep breathing, meditation, or gentle exercise. Ensure you're getting enough sleep and maintaining a balanced diet. If stress is affecting your daily life, consider speaking with a mental health professional.",
-		"diet":       "A balanced diet is essential for good health. Focus on whole foods like fruits, vegetables, lean proteins, and whole grains. Stay hydrated and limit processed foods and added sugars. For personalized nutrition advice, consider consulting with a registered dietitian.",
-		"exercise":   "Regular physical activity is important for maintaining health. Aim for at least 150 minutes of moderate exercise per week. Start slowly if you're new to exercise and choose activities you enjoy. Always consult with a healthcare provider before starting a new exercise program, especially if you have existing health conditions.",
-		"calories":   "Multiple exercisies are available for this problem",
-		"Stationary": "For this type of problem It is recommended to have a strict died for a deficitary calories intake",
+	payload := map[string]string{"query": userMessage}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Sprintf("Error encoding JSON: %v", err)
 	}
 
-	// Simple keyword matching - replace with actual AI integration
-	lowerMsg := strings.ToLower(userMessage)
-	for keyword, response := range responses {
-		if strings.Contains(lowerMsg, keyword) {
-			return response
-		}
+	resp, err := http.Post("http://localhost:8000/query", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return fmt.Sprintf("Error sending request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Sprintf("Error reading response: %v", err)
 	}
 
-	// Default response
-	return "Thank you for sharing your health concern. I'm analyzing this and will provide general guidance. Remember, I can offer health information but for specific medical advice, diagnosis, or treatment, please consult with a qualified healthcare professional. Could you tell me more about your symptoms or concerns?"
+	// Return response as string (you can unmarshal JSON if needed)
+	return string(body)
 }
 
 // Helper function to reverse message order
