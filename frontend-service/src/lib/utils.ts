@@ -1,3 +1,4 @@
+import { AIResponse } from "@/interfaces/aiResp";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -14,4 +15,9 @@ export const authFetch = async (url: string, options: RequestInit = {}) => {
   };
 
   return fetch(url, { ...options, headers });
+};
+
+export const aiResponseToString = (resp: AIResponse): string => {
+  const { summary, recommendations, disclaimer } = resp;
+  return [summary, recommendations, disclaimer].filter(Boolean).join("\n\n");
 };

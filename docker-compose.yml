@@ -10,6 +10,7 @@ services:
       - ./rag-service/sentence:/app/sentence
       - ./rag-service/main.py:/app/main.py
       - ./rag-service/rag.py:/app/rag.py
+      - ./rag-service/.env:/app/.env
     ports:
       - "8000:8000"
     restart: unless-stopped

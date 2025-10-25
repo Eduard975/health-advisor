@@ -47,7 +47,7 @@ func SendMessage(c *gin.Context) {
 	}
 
 	// Generate AI response
-	aiResponse := generateAIResponse(req.Message)
+	aiResponse := generateAIResponse(req.Message, req.History)
 
 	// Save AI response
 	aiMessage := models.ChatMessage{
@@ -222,8 +222,12 @@ func GetChatSessions(c *gin.Context) {
 	})
 }
 
-func generateAIResponse(userMessage string) string {
-	payload := map[string]string{"query": userMessage}
+func generateAIResponse(userMessage string, history []models.ChatHistoryItem) string {
+	payload := map[string]interface{}{
+		"query":   userMessage,
+		"history": history,
+	}
+
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Sprintf("Error encoding JSON: %v", err)
@@ -240,17 +244,14 @@ func generateAIResponse(userMessage string) string {
 		return fmt.Sprintf("Error reading response: %v", err)
 	}
 
-	// Parse the JSON response
 	var ragResponse struct {
 		Answer string `json:"answer"`
 	}
 
 	if err := json.Unmarshal(body, &ragResponse); err != nil {
-		// If parsing fails, return the raw response
 		return string(body)
 	}
 
-	// Return just the answer text
 	return ragResponse.Answer
 }
 

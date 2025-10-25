@@ -82,7 +82,14 @@ def compute_dynamic_k(query, min_k=5, max_k=15):
 
     return food_k, activity_k
 
-def send_query(query):
+def send_query(query, history=None):
+    if history is None:
+        history = []
+
+    chat_context = "\n".join(
+        [f"{msg.sender.upper()}: {msg.text}" for msg in history[-6:]]
+    )
+
     dataset_type = classify_query(query)
     if dataset_type == "no":
         return "I can't answer that question."
@@ -101,33 +108,7 @@ def send_query(query):
             contexts.append(f"--- ACTIVITY DATA ---\n{activity_context}")
 
     combined_context = "\n\n".join(contexts)
-    
-    # prompt = f"""
-    #     You are a knowledgeable nutritionist and fitness advisor. 
-    #     Use the following context to answer the question accurately and concisely. 
-    #     Do not invent information not in the context.
 
-    #     Context:
-    #     {combined_context}
-
-    #     Question: {query}
-
-    #     Instructions:
-    #     1. Keep the answer short and structured with clear headings.
-    #     2. Use this format:
-    #     - Summary: 1-2 sentences about the main point.
-    #     - Recommendations: concise actionable tips (bullet points).
-    #     - Always end with this disclaimer: 
-    #     \"This information is for general knowledge only 
-    #     and does not constitute medical advice. Consult with a 
-    #     qualified healthcare professional or registered dietitian for personalized advice.\"
-    #     3. Provide simple metrics or calculations if needed 
-    #     but avoid very detailed calculations or overly long explanations.
-    #     4. If you don't know or can't return an aswer send a answer with 
-    #     \"I cannot answer to the question, try another question or a question in another format\"
-
-    #     Provide the answer now:
-    #     """
     prompt = f"""
         ### ROLE
         You are an expert nutritionist and fitness advisor. Your tone must be professional, helpful, and strictly evidence-based.
@@ -160,15 +141,17 @@ def send_query(query):
         Consult with a qualified healthcare professional or registered dietitian for personalized advice.*
 
         ---
-        ### CONTEXT
+        ### CHAT HISTORY CONTEXT
+        {chat_context}
+
+        ### DATASET CONTEXT
         {combined_context}
 
         ### USER'S QUESTION
         {query}
     """
 
+    print('[LOG]\n' + prompt)
+
     response = model.generate_content(prompt)
-
-    print(response)
     return response.text
-

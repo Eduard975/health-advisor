@@ -11,9 +11,16 @@ type ChatMessage struct {
 	SessionID string    `firestore:"sessionId,omitempty" json:"sessionId"` // Optional: for grouping chats into sessions
 }
 
+type ChatHistoryItem struct {
+	Sender    string    `json:"sender"`
+	Text      string    `json:"text"`
+	Timestamp time.Time `json:"timestamp"`
+}
+
 type ChatRequest struct {
-	Message   string `json:"message" binding:"required"`
-	SessionID string `json:"sessionId,omitempty"` // Optional: if you want session-based chats
+	Message   string            `json:"message"`
+	SessionID string            `json:"sessionId"`
+	History   []ChatHistoryItem `json:"history"`
 }
 
 type ChatResponse struct {

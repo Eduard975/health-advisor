@@ -6,22 +6,11 @@ import { Card } from "@/components/ui/card";
 import { Send, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import aiAvatar from "@/assets/ai-avatar.jpg";
-import { authFetch } from "@/lib/utils";
+import { aiResponseToString, authFetch } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
-interface Message {
-  id: number;
-  text: string | AIResponse;
-  sender: "user" | "ai";
-  timestamp: Date;
-}
-
-interface AIResponse {
-  summary: string;
-  recommendations: string;
-  disclaimer: string;
-}
+import { Message } from "@/interfaces/message";
+import { AIResponse } from "@/interfaces/aiResp";
 
 const Dashboard = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -139,15 +128,39 @@ const Dashboard = () => {
       timestamp: new Date(),
     };
 
+    // Add user message to the chat UI
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
     setIsLoading(true);
 
     try {
+      // Build full chat history for RAG (include both user & AI text)
+      const chatHistory = messages.map((msg) => ({
+        sender: msg.sender,
+        text:
+          typeof msg.text === "string"
+            ? msg.text
+            : aiResponseToString(msg.text),
+        timestamp: msg.timestamp,
+      }));
+
+      // Add the new user message
+      if (typeof userMessage.text === "string") {
+        chatHistory.push({
+          sender: "user",
+          text: userMessage.text,
+          timestamp: userMessage.timestamp,
+        });
+      }
+
+      // Call backend API
       const response = await authFetch("http://localhost:8001/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage.text }),
+        body: JSON.stringify({
+          message: userMessage.text,
+          history: chatHistory,
+        }),
       });
 
       if (!response.ok) {
@@ -156,56 +169,41 @@ const Dashboard = () => {
 
       const data = await response.json();
 
-      // ## TEST DATA
-      // const data = `## Summary Based on the provided data, sockeye salmon canned and fruit flavored
-      // water contain the highest amounts of Vitamin E per 100g. ## Recommendations -
-      // Consume sockeye salmon canned (7.0 mg of Vitamin E per 100g). -
-      //  Drink fruit flavored water (4.5 mg of Vitamin E per 100g). -
-      // Eat green tomato (0.7 mg of Vitamin E per 100g). -
-      // Eat dandelion greens cooked (0.6 mg of Vitamin E per 100g). -
-      // Eat orange roughy cooked (0.5 mg of Vitamin E per 100g).
-      //  --- ## Disclaimer This information is for general knowledge only and does not constitute medical advice.
-      // Consult with a qualified healthcare professional or registered dietitian for personalized advice.`;
+      // Extract AI text
+      let aiResponseText =
+        data.aiMessage?.text || data.message || data.response || "";
 
-      // const data = `I'm sorry, but based on the provided information,
-      //  I cannot answer that question. Please try rephrasing or asking about a different topic.`;
-      // console.log("## Data" + data);
-
-      // Parse the text if it's a JSON string
-      let aiResponseText = data.aiMessage.text;
-
-      // let aiResponseText = data;
-
-      // Try to parse if it's a JSON string
+      // Handle potential JSON-wrapped responses
       try {
         const parsed = JSON.parse(aiResponseText);
         aiResponseText = parsed.answer || aiResponseText;
       } catch {
-        // If not JSON, use as is
+        /* leave as-is if not JSON */
       }
 
-      console.log(aiResponseText);
+      // Parse AI response into sections
+      const parsedAI = parseAIResponse(aiResponseText);
 
+      // Store AI message
       const aiMessage: Message = {
         id: messages.length + 2,
-        text: parseAIResponse(aiResponseText),
+        text: parsedAI,
         sender: "ai",
         timestamp: new Date(),
       };
-
-      console.log(aiMessage.text);
-      if (!aiMessage.text) aiMessage.text = "I can't answer that";
 
       setMessages((prev) => [...prev, aiMessage]);
     } catch (err: any) {
-      const aiMessage: Message = {
-        id: messages.length + 2,
-        text: "Sorry, something went wrong. Please try again later.",
-        sender: "ai",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
       console.error(err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: messages.length + 2,
+          text: "Sorry, something went wrong. Please try again later.",
+          sender: "ai",
+          timestamp: new Date(),
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
